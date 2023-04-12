@@ -1,36 +1,56 @@
+import { useEffect, useState } from "react";
 import Card from "../UI/Card";
 import classes from "./AvailableMeals.module.css";
 import Meal from "./Item/Meal";
 
-const DUMMY_MEALS = [
-  {
-    id: "m1",
-    name: "Sushi",
-    description: "Finest fish and veggies",
-    price: 22.99
-  },
-  {
-    id: "m2",
-    name: "Schnitzel",
-    description: "A german specialty!",
-    price: 16.5
-  },
-  {
-    id: "m3",
-    name: "Barbecue Burger",
-    description: "American, raw, meaty",
-    price: 12.99
-  },
-  {
-    id: "m4",
-    name: "Green Bowl",
-    description: "Healthy...and green...",
-    price: 18.99
-  }
-];
+const URL_PATH =
+  "https://react-app-1992-default-rtdb.europe-west1.firebasedatabase.app/meals.json";
 
 const AvailableMeals = () => {
-  const mealsList = DUMMY_MEALS.map((meal) => {
+  const [meals, setMeals] = useState([]);
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchedMeals = async () => {
+      const response = await fetch(URL_PATH);
+      if (!response.ok) {
+        throw new Error("something went wrong");
+      }
+      const data = await response.json(); //data jest obiektem, trzeba zamienic go w tablice obiektow
+      const loadedData = [];
+      for (const key in data) {
+        loadedData.push({
+          id: key,
+          name: data[key].name,
+          price: data[key].price,
+          description: data[key].description
+        });
+      }
+      setMeals(loadedData);
+      setIsLoading(false);
+    };
+    fetchedMeals().catch((error) => {
+      setIsLoading(false);
+      setError(error.message);
+    });
+  }, []); //if dependencies is not set data will be fetched only once
+
+  if (isLoading) {
+    return (
+      <section className={classes.loading}>
+        <p>data is loading...</p>
+      </section>
+    );
+  }
+  if (error) {
+    return (
+      <section className={classes.error}>
+        <p>{error}</p>
+      </section>
+    );
+  }
+  const mealsList = meals.map((meal) => {
     return (
       <Meal
         id={meal.id}
